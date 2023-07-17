@@ -1,0 +1,49 @@
+SELECT * FROM USERBASE  WHERE USER_ID IN(985,9,95,676,98,81,436,1,356,187,7,912,39,583,5,22,2,54,764,166);
+
+-- Find the total number of users from each country
+
+SELECT COUNTRY,COUNT(USER_ID) TOTAL_USERS FROM USERBASE GROUP BY COUNTRY ORDER BY TOTAL_USERS DESC
+
+--which Type of subscription users are buying more in every country
+
+WITH CTE AS (SELECT SUBSCRIPTION_TYPE,Country,COUNT(SUBSCRIPTION_TYPE) TOTAL_SUBSCRIPTIONS FROM userbase GROUP BY SUBSCRIPTION_TYPE,Country ),
+CTE2 AS (SELECT *,ROW_NUMBER() OVER(PARTITION BY COUNTRY ORDER BY TOTAL_SUBSCRIPTIONS DESC) RN FROM CTE) SELECT COUNTRY,Subscription_Type,TOTAL_SUBSCRIPTIONS
+FROM CTE2 WHERE RN=1 ;
+
+-- what type of plan is more popular on each type of device
+
+SELECT * FROM (SELECT DEVICE,SUBSCRIPTION_TYPE, COUNT(SUBSCRIPTION_TYPE) TOTAL,ROW_NUMBER() OVER(PARTITION BY DEVICE ORDER BY COUNT(SUBSCRIPTION_TYPE) DESC) RN 
+FROM userbase GROUP BY DEVICE,SUBSCRIPTION_TYPE )A WHERE A.RN=1
+
+--without using any subqueries and Window functions
+
+SELECT TOP 4 DEVICE,SUBSCRIPTION_TYPE, COUNT(SUBSCRIPTION_TYPE) TOTAL FROM userbase GROUP BY DEVICE,SUBSCRIPTION_TYPE ORDER BY TOTAL DESC
+
+--find which age group people are buying our subscription more
+
+WITH CTE AS (SELECT *,CASE WHEN AGE < 20 THEN '0-19'
+              WHEN AGE BETWEEN 20 AND 29 THEN '20-29'
+			  WHEN AGE BETWEEN 30 AND 39 THEN '30-39'
+			  ELSE '40+'
+			  END AGE_GROUP FROM userbase)
+SELECT AGE_GROUP,COUNT(AGE_GROUP) COUNT FROM CTE GROUP BY AGE_GROUP;
+
+--Find out which year has more subscriptions
+
+SELECT year(join_date) year ,COUNT(year(join_date)) total from userbase group by year(join_date) order by total desc
+
+-- Total number of subscriptions for each type
+
+SELECT SUBSCRIPTION_TYPE,COUNT(SUBSCRIPTION_TYPE) TOTAL FROM userbase GROUP BY SUBSCRIPTION_TYPE;
+
+--calculate the total revenue of each subscription type
+
+SELECT SUBSCRIPTION_TYPE,SUM(MONTHLY_REVENUE) REVENUE FROM userbase GROUP BY SUBSCRIPTION_TYPE
+
+--Find the country with highest revunue
+
+SELECT COUNTRY,SUM(MONTHLY_REVENUE) TOTAL_REVENUE FROM userbase GROUP BY COUNTRY;
+
+ --Find who are buying the netflix subscription more among male/female
+
+ SELECT GENDER,SUBSCRIPTION_TYPE,COUNT(GENDER) TOTAL FROM userbase GROUP BY GENDER,SUBSCRIPTION_TYPE 
